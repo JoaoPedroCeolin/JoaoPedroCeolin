@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Cobrinha</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+    background:#111;
+    color:white;
+    font-family:Arial;
+    text-align:center;
+}
+
+canvas{
+    background:black;
+    border:2px solid #00ff88;
+    margin-top:15px;
+}
+
+button{
+    padding:10px 20px;
+    margin:5px;
+    border:none;
+    border-radius:10px;
+    background:#00ff88;
+    font-size:18px;
+}
+
+#mensagem{
+    font-size:22px;
+    font-weight:bold;
+    color:#ff5555;
+    min-height:30px;
+}
+
+.controles button{
+    width:70px;
+    height:70px;
+    font-size:24px;
+}
+</style>
+</head>
+<body>
+
+<h1>🐍 COBRINHA</h1>
+
+<p>Pontos: <span id="score">0</span></p>
+
+<p id="mensagem"></p>
+
+<button onclick="reiniciar()">🔄 Reiniciar</button>
+<button onclick="window.location.href='/'">🏠 Voltar</button>
+
+<br>
+
+<canvas id="game" width="400" height="400"></canvas>
+
+<div class="controles">
+    <div>
+        <button onclick="mudarDirecao('up')">⬆️</button>
+    </div>
+
+    <div>
+        <button onclick="mudarDirecao('left')">⬅️</button>
+        <button onclick="mudarDirecao('down')">⬇️</button>
+        <button onclick="mudarDirecao('right')">➡️</button>
+    </div>
+</div>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+const tamanho = 20;
+const blocos = 20;
+
+let cobra;
+let comida;
+let direcao;
+let pontos;
+let timer;
+
+function iniciar() {
+
+    cobra = [
+        {x: 10, y: 10}
+    ];
+
+    comida = {
+        x: 5,
+        y: 5
+    };
+
+    direcao = "right";
+    pontos = 0;
+
+    document.getElementById("score").innerText = pontos;
+    document.getElementById("mensagem").innerText = "";
+
+    clearInterval(timer);
+    timer = setInterval(update, 120);
+}
+
+function gerarComida() {
+
+    comida = {
+        x: Math.floor(Math.random() * blocos),
+        y: Math.floor(Math.random() * blocos)
+    };
+}
+
+function update() {
+
+    let cabeca = {
+        x: cobra[0].x,
+        y: cobra[0].y
+    };
+
+    if(direcao === "right") cabeca.x++;
+    if(direcao === "left") cabeca.x--;
+    if(direcao === "up") cabeca.y--;
+    if(direcao === "down") cabeca.y++;
+
+    if(
+        cabeca.x < 0 ||
+        cabeca.y < 0 ||
+        cabeca.x >= blocos ||
+        cabeca.y >= blocos
+    ){
+        gameOver();
+        return;
+    }
+
+    for(let parte of cobra){
+        if(cabeca.x === parte.x && cabeca.y === parte.y){
+            gameOver();
+            return;
+        }
+    }
+
+    cobra.unshift(cabeca);
+
+    if(
+        cabeca.x === comida.x &&
+        cabeca.y === comida.y
+    ){
+        pontos++;
+        document.getElementById("score").innerText = pontos;
+        gerarComida();
+    }else{
+        cobra.pop();
+    }
+
+    desenhar();
+}
+
+function desenhar() {
+
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    ctx.fillStyle = "red";
+    ctx.fillRect(
+        comida.x * tamanho,
+        comida.y * tamanho,
+        tamanho,
+        tamanho
+    );
+
+    ctx.fillStyle = "#00ff88";
+
+    for(let parte of cobra){
+        ctx.fillRect(
+            parte.x * tamanho,
+            parte.y * tamanho,
+            tamanho,
+            tamanho
+        );
+    }
+}
+
+function gameOver() {
+
+    clearInterval(timer);
+
+    document.getElementById("mensagem").innerText =
+        "💀 GAME OVER! Pontos: " + pontos;
+}
+
+function reiniciar() {
+    iniciar();
+}
+
+function mudarDirecao(nova) {
+
+    if(nova === "up" && direcao !== "down")
+        direcao = nova;
+
+    if(nova === "down" && direcao !== "up")
+        direcao = nova;
+
+    if(nova === "left" && direcao !== "right")
+        direcao = nova;
+
+    if(nova === "right" && direcao !== "left")
+        direcao = nova;
+}
+
+document.addEventListener("keydown", function(e){
+
+    if(e.key === "ArrowUp")
+        mudarDirecao("up");
+
+    if(e.key === "ArrowDown")
+        mudarDirecao("down");
+
+    if(e.key === "ArrowLeft")
+        mudarDirecao("left");
+
+    if(e.key === "ArrowRight")
+        mudarDirecao("right");
+});
+
+iniciar();
+</script>
+
+</body>
+</html>
